@@ -19,6 +19,10 @@ function UserCard({ user, onUserClick }) {
         </Card.Text>
       {/* Buttotn*/}
       
+      <button variant="primary" onClick={() => onUserClick(user)}>
+          View Details
+        </button>
+      
       </Card.Body>
     </Card>
   )
