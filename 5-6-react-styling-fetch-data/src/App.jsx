@@ -324,16 +324,53 @@ import UserModal from './components/UserModal'
 
 function App() {
   const [users, setUsers] = useState([])
+  const [filteredUsers, setFilteredUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [showModal, setShowModal] = useState(false)
+  const [selectedUser, setSelectedUser] = useState(null)
 
   useEffect(() => {
     {/*API fetch logic*/}
-
+    const fetchUsers = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const response = await fetch('https://jsonplaceholder.typicode.com/users')
+        if (!response.ok) {
+          throw new Error('Network response was not ok')
+        }
+        const data = await response.json()
+        setUsers(data)
+        setFilteredUsers(data)
+      } catch (error) {
+        setError(error.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchUsers()
   }, [])
 
-  const handleUserClick = (user) => {
-  }
+  useEffect(() => {
+    if (searchTerm === '') {
+      setFilteredUsers(users)
+    } else {
+      const filtered = users.filter(user =>
+        user.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      setFilteredUsers(filtered)
+    }
+  }, [searchTerm, users])
 
+  const handleUserClick = (user) => {
+    setSelectedUser(user)
+    setShowModal(true)
+  }
   const handleCloseModal = () => {
+    setShowModal(false)
+    setSelectedUser(null)
   }
 
   return (
@@ -346,7 +383,28 @@ function App() {
       </header>
 
       <Container className="py-3 mb-4">
-        <SearchBar />
+        <SearchBar setSearchTerm={setSearchTerm}/>
+
+
+        {loading && (
+          <div className="text-center my-5">
+            <Spinner animation="border" role="status" variant="primary" />
+            <p className="mt-2 text-primary">Loading users...</p>
+          </div>
+        )}
+
+        {error && <Alert variant="danger" className="my-5">Error: {error}</Alert>}
+        {!loading && !error && (
+          <UserList users={filteredUsers} onUserClick={handleUserClick} />
+        )}
+
+        {selectedUser && (
+          <UserModal
+            show={showModal}
+            user={selectedUser}
+            onHide={handleCloseModal}
+          />
+        )}
 
         {/* {loading && <Spinner ... />} */}
         {/* {error && <Alert ...>{error}</Alert>} */}
